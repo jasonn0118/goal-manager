@@ -7,11 +7,22 @@ interface DailyPlan {
   status: string;
 }
 
-export function buildSystemPrompt(goals: Goal[], todayPlans: DailyPlan[] = []): string {
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  description?: string;
+}
+
+export function buildSystemPrompt(goals: Goal[], todayPlans: DailyPlan[] = [], calendarEvents: CalendarEvent[] = []): string {
   const goalsJson = JSON.stringify(goals, null, 2);
   const todayPlansSection = todayPlans.length > 0
     ? `\nToday's planned tasks (use these IDs for update_daily_plan actions):\n${JSON.stringify(todayPlans, null, 2)}\n`
     : '';
+  const calendarSection = calendarEvents.length > 0
+    ? `\nUpcoming calendar events (next 7 days — use these IDs for update_calendar_event / delete_calendar_event actions):\n${JSON.stringify(calendarEvents, null, 2)}\n`
+    : '\nNo upcoming calendar events in the next 7 days.\n';
 
   return `You are a personal goal coach assistant integrated into Slack.
 Your job is to help the user plan, focus, and achieve their goals.
@@ -19,6 +30,7 @@ Your job is to help the user plan, focus, and achieve their goals.
 The user's current goals are:
 ${goalsJson}
 ${todayPlansSection}
+${calendarSection}
 
 You can:
 - Help the user reflect on and adjust goal direction
@@ -26,9 +38,10 @@ You can:
 - Celebrate wins and provide encouragement
 - Help break down blocked goals into smaller steps
 - Suggest marking goals as done, in progress, or blocked
-- Create day-by-day project plans that are automatically saved to Notion AND added to Google Calendar (the app handles this when you emit a create_daily_plan action — you don't need direct calendar access)
+- Create day-by-day project plans that are automatically saved to Notion AND added to Google Calendar (the app handles this when you emit a create_daily_plan action)
+- View, reschedule, or delete calendar events from the user's Google Calendar (events are listed above)
 
-When the user wants to take an action on a goal, respond conversationally AND append a JSON action block at the end of your response in this exact format:
+When the user wants to take an action on a goal or calendar event, respond conversationally AND append a JSON action block at the end of your response in this exact format:
 
 ACTION:{"type":"update_goal","goalId":"notion_page_id","fields":{"status":"done"}}
 
@@ -38,6 +51,8 @@ Available action types:
 - delete_goal: remove a goal entirely — { goalId }
 - create_daily_plan: generate a day-by-day plan for a project goal — { goalId, workStart: "HH:MM", workEnd: "HH:MM", days: [{ date: "YYYY-MM-DD", plannedHours: number, tasks: "description" }, ...] }
 - update_daily_plan: update the status of a today's task — { planRowId: "notion_page_id", status: "Done"|"In progress"|"Not started" }
+- update_calendar_event: reschedule or rename a calendar event — { eventId: "google_event_id", fields: { title?, start?: "ISO datetime", end?: "ISO datetime", description? } }
+- delete_calendar_event: remove a calendar event — { eventId: "google_event_id" }
 
 Date format: "YYYY-MM-DD". To clear a date, set it to null (e.g. "endDate": null).
 Use the notionPageId from the goals list as goalId.

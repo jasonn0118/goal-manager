@@ -27,11 +27,13 @@ export function registerMessageHandlers(
   async function handleMessage(userId: string, text: string, say: (msg: any) => Promise<any>) {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const [goals, todayPlans] = await Promise.all([
+      const sevenDaysLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const [goals, todayPlans, calendarEvents] = await Promise.all([
         goalsService.getActiveGoals(),
         goalsService.getDailyPlansForDate(today),
+        goalsService.getUpcomingCalendarEvents(today, sevenDaysLater),
       ]);
-      const response = await aiService.chat(userId, text, goals, todayPlans);
+      const response = await aiService.chat(userId, text, goals, todayPlans, calendarEvents);
       const { cleanText, action } = parseAction(response);
 
       if (action) {
@@ -74,6 +76,12 @@ async function executeAction(action: any, goalsService: GoalsService) {
         break;
       case 'update_daily_plan':
         await goalsService.updateDailyPlanRow(action.planRowId, action.status);
+        break;
+      case 'update_calendar_event':
+        await goalsService.updateCalendarEvent(action.eventId, action.fields);
+        break;
+      case 'delete_calendar_event':
+        await goalsService.deleteCalendarEvent(action.eventId);
         break;
       default:
         logger.warn(`Unknown action type: ${action.type}`);
