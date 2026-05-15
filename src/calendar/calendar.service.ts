@@ -7,6 +7,20 @@ interface Interval {
   end: Date;
 }
 
+const COLOR_MAP: Record<string, string> = {
+  lavender: '1', sage: '2', grape: '3', flamingo: '4',
+  banana: '5', tangerine: '6', peacock: '7', graphite: '8',
+  blueberry: '9', basil: '10', tomato: '11',
+  // aliases
+  purple: '3', pink: '4', orange: '6', teal: '7',
+  gray: '8', grey: '8', blue: '9', green: '10', red: '11',
+};
+
+function resolveColorId(color?: string): string | undefined {
+  if (!color) return undefined;
+  return COLOR_MAP[color.toLowerCase()];
+}
+
 @Injectable()
 export class CalendarService {
   private readonly logger = new Logger(CalendarService.name);
@@ -86,24 +100,24 @@ export class CalendarService {
     return freeSlots;
   }
 
-  async createEvent(title: string, description: string, start: Date, end: Date): Promise<void> {
+  async createEvent(title: string, description: string, start: Date, end: Date, color?: string): Promise<void> {
     try {
-      await this.calendar.events.insert({
-        calendarId: 'primary',
-        requestBody: {
-          summary: `🎯 ${title}`,
-          description,
-          start: { dateTime: this.toTimeString(start) },
-          end: { dateTime: this.toTimeString(end) },
-        },
-      });
+      const body: any = {
+        summary: `🎯 ${title}`,
+        description,
+        start: { dateTime: this.toTimeString(start) },
+        end: { dateTime: this.toTimeString(end) },
+      };
+      const colorId = resolveColorId(color);
+      if (colorId) body.colorId = colorId;
+      await this.calendar.events.insert({ calendarId: 'primary', requestBody: body });
     } catch (err) {
       this.logger.error(`Failed to create calendar event "${title}"`, err);
     }
   }
 
-  async createEventFromStrings(title: string, start: string, end: string, description?: string): Promise<void> {
-    await this.createEvent(title, description ?? '', new Date(start), new Date(end));
+  async createEventFromStrings(title: string, start: string, end: string, description?: string, color?: string): Promise<void> {
+    await this.createEvent(title, description ?? '', new Date(start), new Date(end), color);
   }
 
   async getUpcomingEvents(startDate: string, endDate: string): Promise<{ id: string; title: string; start: string; end: string; description?: string }[]> {
@@ -130,7 +144,7 @@ export class CalendarService {
     }
   }
 
-  async updateEvent(eventId: string, fields: { title?: string; start?: string; end?: string; description?: string }): Promise<void> {
+  async updateEvent(eventId: string, fields: { title?: string; start?: string; end?: string; description?: string; color?: string }): Promise<void> {
     try {
       const existing = await this.calendar.events.get({ calendarId: 'primary', eventId });
       const patch: any = {};
@@ -138,6 +152,8 @@ export class CalendarService {
       if (fields.description !== undefined) patch.description = fields.description;
       if (fields.start !== undefined) patch.start = { dateTime: fields.start, timeZone: existing.data.start?.timeZone };
       if (fields.end !== undefined) patch.end = { dateTime: fields.end, timeZone: existing.data.end?.timeZone };
+      const colorId = resolveColorId(fields.color);
+      if (colorId) patch.colorId = colorId;
       await this.calendar.events.patch({ calendarId: 'primary', eventId, requestBody: patch });
     } catch (err) {
       this.logger.error(`Failed to update calendar event ${eventId}`, err);

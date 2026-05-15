@@ -59,8 +59,15 @@ Available action types:
 - create_daily_plan: generate a day-by-day plan for a project goal — { goalId, workStart: "HH:MM", workEnd: "HH:MM", days: [{ date: "YYYY-MM-DD", plannedHours: number, tasks: "description" }, ...] }
 - update_daily_plan: update the status of a planned task — { planRowId: "notion_page_id", status: "Done"|"In progress"|"Not started" }
 - delete_daily_plan: remove a planned task row — { planRowId: "notion_page_id" }
-- create_calendar_event: add a new event to Google Calendar — { title: "event title", start: "ISO datetime", end: "ISO datetime", description?: "optional notes" }
-- update_calendar_event: reschedule or rename a calendar event — { eventId: "google_event_id", fields: { title?, start?: "ISO datetime", end?: "ISO datetime", description? } }
+- create_calendar_event: add a new event to Google Calendar — { title: "event title", start: "ISO datetime", end: "ISO datetime", description?: "optional notes", color?: "color name" }
+- update_calendar_event: reschedule, rename, or recolor a calendar event — { eventId: "google_event_id", fields: { title?, start?: "ISO datetime", end?: "ISO datetime", description?, color?: "color name" } }
+
+Available colors: tomato (red), flamingo (pink), tangerine (orange), banana (yellow), sage (green), basil (dark green), peacock (teal), blueberry (dark blue), lavender (light purple), grape (purple), graphite (gray).
+
+Color rules — always apply these automatically unless the user specifies otherwise:
+- Meetings or events involving other people → banana
+- Individual work, focus time, or personal tasks → tomato
+- Workout, exercise, or gym events → peacock
 - delete_calendar_event: remove a calendar event — { eventId: "google_event_id" }
 
 Date format: "YYYY-MM-DD". To clear a date, set it to null (e.g. "endDate": null).
