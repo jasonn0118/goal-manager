@@ -36,11 +36,15 @@ export function registerMessageHandlers(
       const response = await aiService.chat(userId, text, goals, todayPlans, calendarEvents);
       const { cleanText, action } = parseAction(response);
 
+      let actionError: string | null = null;
       if (action) {
-        await executeAction(action, goalsService);
+        actionError = await executeAction(action, goalsService);
       }
 
-      await say(cleanText);
+      const finalText = actionError
+        ? `${cleanText}\n\n⚠️ Action failed: ${actionError}`
+        : cleanText;
+      await say(finalText);
     } catch (err) {
       logger.error('Error handling message', err);
       await say('Sorry, something went wrong. Please try again.');
@@ -59,7 +63,7 @@ export function registerMessageHandlers(
   });
 }
 
-async function executeAction(action: any, goalsService: GoalsService) {
+async function executeAction(action: any, goalsService: GoalsService): Promise<string | null> {
   try {
     switch (action.type) {
       case 'update_goal':
@@ -86,7 +90,9 @@ async function executeAction(action: any, goalsService: GoalsService) {
       default:
         logger.warn(`Unknown action type: ${action.type}`);
     }
-  } catch (err) {
+    return null;
+  } catch (err: any) {
     logger.error(`Failed to execute action ${action.type}`, err);
+    return err?.message ?? 'Unknown error';
   }
 }
