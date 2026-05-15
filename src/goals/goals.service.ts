@@ -78,6 +78,10 @@ export class GoalsService {
     return this.notionService.updateDailyPlanRow(pageId, status);
   }
 
+  deleteDailyPlanRow(pageId: string): Promise<void> {
+    return this.notionService.deleteDailyPlanRow(pageId);
+  }
+
   getUpcomingCalendarEvents(startDate: string, endDate: string) {
     return this.calendarService.getUpcomingEvents(startDate, endDate);
   }

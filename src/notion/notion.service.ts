@@ -188,6 +188,15 @@ export class NotionService {
     }
   }
 
+  async deleteDailyPlanRow(pageId: string): Promise<void> {
+    try {
+      await this.client.pages.update({ page_id: pageId, archived: true });
+    } catch (err) {
+      this.logger.error(`Failed to delete daily plan row ${pageId}`, err);
+      throw err;
+    }
+  }
+
   async updateDailyPlanRow(pageId: string, status: string): Promise<void> {
     const page = await this.client.pages.update({
       page_id: pageId,
