@@ -135,7 +135,7 @@ export class NotionService {
           properties: {
             Name: { title: [{ text: { content: `${day.date} · ${goalTitle}` } }] },
             Date: { date: { start: day.date } },
-            Project: { relation: [{ id: goalId }] },
+            Projects: { relation: [{ id: goalId }] },
             'Planned Hours': { number: day.plannedHours },
             Tasks: { rich_text: [{ text: { content: day.tasks } }] },
             Status: { status: { name: 'Not started' } },
