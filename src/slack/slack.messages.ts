@@ -109,6 +109,9 @@ async function executeAction(action: any, goalsService: GoalsService): Promise<s
       case 'update_daily_plan':
         await goalsService.updateDailyPlanRow(action.planRowId, action.status);
         break;
+      case 'delete_daily_plan':
+        await goalsService.deleteDailyPlanRow(action.planRowId);
+        break;
       case 'update_calendar_event':
         await goalsService.updateCalendarEvent(action.eventId, action.fields);
         break;

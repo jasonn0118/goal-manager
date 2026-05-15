@@ -18,8 +18,10 @@ function dateValue(prop: any): string | undefined {
   return prop?.date?.start ?? undefined;
 }
 
-function formulaNumber(prop: any): number {
-  return prop?.formula?.number ?? 0;
+function progressNumber(prop: any): number {
+  if (typeof prop?.formula?.number === 'number') return prop.formula.number;
+  if (typeof prop?.rollup?.number === 'number') return prop.rollup.number;
+  return 0;
 }
 
 function numberValue(prop: any): number | undefined {
@@ -47,7 +49,7 @@ export function mapPageToGoal(page: NotionPage): Goal {
     endDate: dateValue(props['End date']),
     startValue: numberValue(props['Start value']),
     endValue: numberValue(props['End value']),
-    progress: formulaNumber(props['Progress']),
+    progress: progressNumber(props['Progress']),
   };
 }
 
