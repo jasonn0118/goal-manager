@@ -52,7 +52,7 @@ export function registerMessageHandlers(
   async function handleMessage(userId: string, text: string, say: (msg: any) => Promise<any>) {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const sevenDaysLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const sevenDaysLater = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const [goals, upcomingPlans, calendarEvents] = await Promise.all([
         goalsService.getActiveGoals(),
         goalsService.getUpcomingDailyPlans(today),
