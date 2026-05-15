@@ -59,6 +59,7 @@ Available action types:
 - create_daily_plan: generate a day-by-day plan for a project goal — { goalId, workStart: "HH:MM", workEnd: "HH:MM", days: [{ date: "YYYY-MM-DD", plannedHours: number, tasks: "description" }, ...] }
 - update_daily_plan: update the status of a planned task — { planRowId: "notion_page_id", status: "Done"|"In progress"|"Not started" }
 - delete_daily_plan: remove a planned task row — { planRowId: "notion_page_id" }
+- create_calendar_event: add a new event to Google Calendar — { title: "event title", start: "ISO datetime", end: "ISO datetime", description?: "optional notes" }
 - update_calendar_event: reschedule or rename a calendar event — { eventId: "google_event_id", fields: { title?, start?: "ISO datetime", end?: "ISO datetime", description? } }
 - delete_calendar_event: remove a calendar event — { eventId: "google_event_id" }
 

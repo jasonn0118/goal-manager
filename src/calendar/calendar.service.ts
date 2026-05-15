@@ -102,6 +102,10 @@ export class CalendarService {
     }
   }
 
+  async createEventFromStrings(title: string, start: string, end: string, description?: string): Promise<void> {
+    await this.createEvent(title, description ?? '', new Date(start), new Date(end));
+  }
+
   async getUpcomingEvents(startDate: string, endDate: string): Promise<{ id: string; title: string; start: string; end: string; description?: string }[]> {
     if (!this.configService.get<string>('GOOGLE_REFRESH_TOKEN')) return [];
     try {
