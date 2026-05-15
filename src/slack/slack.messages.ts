@@ -65,6 +65,9 @@ async function executeAction(action: any, goalsService: GoalsService) {
       case 'delete_goal':
         await goalsService.archiveGoal(action.goalId);
         break;
+      case 'create_daily_plan':
+        await goalsService.createDailyPlan(action.goalId, action.days);
+        break;
       default:
         logger.warn(`Unknown action type: ${action.type}`);
     }

@@ -11,11 +11,13 @@ export class NotionService {
   private readonly client: Client;
   private readonly goalsDbId: string;
   private readonly sessionsDbId: string;
+  private readonly dailyPlansDbId: string;
 
   constructor(private configService: ConfigService) {
     this.client = new Client({ auth: this.configService.get<string>('NOTION_API_KEY') });
     this.goalsDbId = this.configService.get<string>('NOTION_GOALS_DB_ID')!;
     this.sessionsDbId = this.configService.get<string>('NOTION_SESSIONS_DB_ID')!;
+    this.dailyPlansDbId = this.configService.get<string>('NOTION_DAILY_PLANS_DB_ID') ?? '';
   }
 
   async getAllGoals(): Promise<Goal[]> {
@@ -118,6 +120,30 @@ export class NotionService {
     } catch (err) {
       this.logger.error(`Failed to archive goal ${notionPageId}`, err);
       throw err;
+    }
+  }
+
+  async createDailyPlanRows(goalId: string, goalTitle: string, days: { date: string; plannedHours: number; tasks: string }[]): Promise<void> {
+    if (!this.dailyPlansDbId) {
+      this.logger.warn('NOTION_DAILY_PLANS_DB_ID is not set — skipping daily plan creation');
+      return;
+    }
+    for (const day of days) {
+      try {
+        await this.client.pages.create({
+          parent: { database_id: this.dailyPlansDbId },
+          properties: {
+            Name: { title: [{ text: { content: `${day.date} · ${goalTitle}` } }] },
+            Date: { date: { start: day.date } },
+            Project: { relation: [{ id: goalId }] },
+            'Planned Hours': { number: day.plannedHours },
+            Tasks: { rich_text: [{ text: { content: day.tasks } }] },
+            Status: { status: { name: 'Not started' } },
+          },
+        });
+      } catch (err) {
+        this.logger.error(`Failed to create daily plan row for ${day.date}`, err);
+      }
     }
   }
 

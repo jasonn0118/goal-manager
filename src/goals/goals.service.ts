@@ -49,6 +49,13 @@ export class GoalsService {
     return this.notionService.archiveGoal(notionPageId);
   }
 
+  async createDailyPlan(goalId: string, days: { date: string; plannedHours: number; tasks: string }[]): Promise<void> {
+    const goals = await this.notionService.getAllGoals();
+    const goal = goals.find((g) => g.notionPageId === goalId);
+    const title = goal?.title ?? 'Project';
+    return this.notionService.createDailyPlanRows(goalId, title, days);
+  }
+
   async findGoalByTitle(title: string): Promise<Goal | undefined> {
     const goals = await this.notionService.getAllGoals();
     const lower = title.toLowerCase();
