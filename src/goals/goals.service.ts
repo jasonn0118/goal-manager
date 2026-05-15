@@ -16,6 +16,7 @@ export interface Goal {
   startValue?: number;
   endValue?: number;
   progress: number;
+  description?: string;
 }
 
 @Injectable()
