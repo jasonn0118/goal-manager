@@ -17,7 +17,7 @@ export class AiService {
     this.client = new Anthropic({ apiKey: this.configService.get<string>('ANTHROPIC_API_KEY') });
   }
 
-  async chat(userId: string, userMessage: string, goals: Goal[]): Promise<string> {
+  async chat(userId: string, userMessage: string, goals: Goal[], todayPlans: { id: string; tasks: string; plannedHours: number; status: string }[] = []): Promise<string> {
     const messages = this.history.get(userId) ?? [];
 
     messages.push({ role: 'user', content: userMessage });
@@ -30,7 +30,7 @@ export class AiService {
       const response = await this.client.messages.create({
         model: 'claude-sonnet-4-6',
         max_tokens: 1024,
-        system: buildSystemPrompt(goals),
+        system: buildSystemPrompt(goals, todayPlans),
         messages,
       });
 

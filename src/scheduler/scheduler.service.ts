@@ -55,10 +55,20 @@ export class SchedulerService {
     this.logger.log('Running evening check-in cron');
 
     try {
-      await this.slackClient.chat.postMessage({
-        channel: this.digestChannel,
-        text: '🌙 *Evening Check-in*\n\nHow did your day go? What goals did you make progress on? Use `/review` for a full summary or just tell me about your wins!',
-      });
+      const today = new Date().toISOString().split('T')[0];
+      const plans = await this.goalsService.getDailyPlansForDate(today);
+
+      let text: string;
+      if (plans.length > 0) {
+        const taskLines = plans
+          .map((p) => `• *${p.tasks}* (${p.plannedHours}h planned) — currently: ${p.status}`)
+          .join('\n');
+        text = `🌙 *Evening Check-in*\n\nHere's what was planned for today:\n${taskLines}\n\nHow did it go? Reply with *done*, *in progress*, or *skipped* for each task.`;
+      } else {
+        text = '🌙 *Evening Check-in*\n\nHow did your day go? What goals did you make progress on? Use `/review` for a full summary or just tell me about your wins!';
+      }
+
+      await this.slackClient.chat.postMessage({ channel: this.digestChannel, text });
     } catch (err) {
       this.logger.error('Evening check-in failed', err);
     }

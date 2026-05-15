@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { NotionService } from '../notion/notion.service';
+import { CalendarService } from '../calendar/calendar.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 
@@ -19,7 +20,10 @@ export interface Goal {
 
 @Injectable()
 export class GoalsService {
-  constructor(private readonly notionService: NotionService) {}
+  constructor(
+    private readonly notionService: NotionService,
+    private readonly calendarService: CalendarService,
+  ) {}
 
   getAllGoals(): Promise<Goal[]> {
     return this.notionService.getAllGoals();
@@ -49,11 +53,25 @@ export class GoalsService {
     return this.notionService.archiveGoal(notionPageId);
   }
 
-  async createDailyPlan(goalId: string, days: { date: string; plannedHours: number; tasks: string }[]): Promise<void> {
+  async createDailyPlan(
+    goalId: string,
+    days: { date: string; plannedHours: number; tasks: string }[],
+    workStart: string,
+    workEnd: string,
+  ): Promise<void> {
     const goals = await this.notionService.getAllGoals();
     const goal = goals.find((g) => g.notionPageId === goalId);
     const title = goal?.title ?? 'Project';
-    return this.notionService.createDailyPlanRows(goalId, title, days);
+    await this.notionService.createDailyPlanRows(goalId, title, days);
+    await this.calendarService.scheduleDailyPlan(title, days, workStart, workEnd);
+  }
+
+  getDailyPlansForDate(date: string) {
+    return this.notionService.getDailyPlansForDate(date);
+  }
+
+  updateDailyPlanRow(pageId: string, status: string): Promise<void> {
+    return this.notionService.updateDailyPlanRow(pageId, status);
   }
 
   async findGoalByTitle(title: string): Promise<Goal | undefined> {
