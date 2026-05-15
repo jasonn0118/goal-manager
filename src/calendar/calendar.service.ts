@@ -102,6 +102,52 @@ export class CalendarService {
     }
   }
 
+  async getUpcomingEvents(startDate: string, endDate: string): Promise<{ id: string; title: string; start: string; end: string; description?: string }[]> {
+    if (!this.configService.get<string>('GOOGLE_REFRESH_TOKEN')) return [];
+    try {
+      const res = await this.calendar.events.list({
+        calendarId: 'primary',
+        timeMin: new Date(`${startDate}T00:00:00`).toISOString(),
+        timeMax: new Date(`${endDate}T23:59:59`).toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+        maxResults: 50,
+      });
+      return (res.data.items ?? []).map((e: any) => ({
+        id: e.id,
+        title: e.summary ?? '(no title)',
+        start: e.start?.dateTime ?? e.start?.date ?? '',
+        end: e.end?.dateTime ?? e.end?.date ?? '',
+        description: e.description,
+      }));
+    } catch (err) {
+      this.logger.error('Failed to fetch upcoming events', err);
+      return [];
+    }
+  }
+
+  async updateEvent(eventId: string, fields: { title?: string; start?: string; end?: string; description?: string }): Promise<void> {
+    try {
+      const existing = await this.calendar.events.get({ calendarId: 'primary', eventId });
+      const patch: any = {};
+      if (fields.title !== undefined) patch.summary = fields.title;
+      if (fields.description !== undefined) patch.description = fields.description;
+      if (fields.start !== undefined) patch.start = { dateTime: fields.start, timeZone: existing.data.start?.timeZone };
+      if (fields.end !== undefined) patch.end = { dateTime: fields.end, timeZone: existing.data.end?.timeZone };
+      await this.calendar.events.patch({ calendarId: 'primary', eventId, requestBody: patch });
+    } catch (err) {
+      this.logger.error(`Failed to update calendar event ${eventId}`, err);
+    }
+  }
+
+  async deleteEvent(eventId: string): Promise<void> {
+    try {
+      await this.calendar.events.delete({ calendarId: 'primary', eventId });
+    } catch (err) {
+      this.logger.error(`Failed to delete calendar event ${eventId}`, err);
+    }
+  }
+
   async scheduleDailyPlan(
     goalTitle: string,
     days: { date: string; plannedHours: number; tasks: string }[],

@@ -74,6 +74,18 @@ export class GoalsService {
     return this.notionService.updateDailyPlanRow(pageId, status);
   }
 
+  getUpcomingCalendarEvents(startDate: string, endDate: string) {
+    return this.calendarService.getUpcomingEvents(startDate, endDate);
+  }
+
+  updateCalendarEvent(eventId: string, fields: { title?: string; start?: string; end?: string; description?: string }) {
+    return this.calendarService.updateEvent(eventId, fields);
+  }
+
+  deleteCalendarEvent(eventId: string) {
+    return this.calendarService.deleteEvent(eventId);
+  }
+
   async findGoalByTitle(title: string): Promise<Goal | undefined> {
     const goals = await this.notionService.getAllGoals();
     const lower = title.toLowerCase();
