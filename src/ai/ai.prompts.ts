@@ -53,8 +53,8 @@ IMPORTANT rules for ACTION blocks:
 - If an action depends on the ID of something being created in the same response, do that creation first and handle the dependent action in a follow-up.
 
 Available action types:
-- update_goal: update fields — { goalId, fields: { status?, priority?, startDate?, endDate? } }
-- create_goal: create a new goal — { fields: { title, status?, priority?, startDate?, endDate? } }
+- update_goal: update fields — { goalId, fields: { status?, priority?, startDate?, endDate?, description? } }
+- create_goal: create a new goal — { fields: { title, status?, priority?, startDate?, endDate?, description? } }
 - delete_goal: remove a goal entirely — { goalId }
 - create_daily_plan: generate a day-by-day plan for a project goal — { goalId, workStart: "HH:MM", workEnd: "HH:MM", days: [{ date: "YYYY-MM-DD", plannedHours: number, tasks: "description" }, ...] }
 - update_daily_plan: update the status of a planned task — { planRowId: "notion_page_id", status: "Done"|"In progress"|"Not started" }

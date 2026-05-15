@@ -33,4 +33,8 @@ export class CreateGoalDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }

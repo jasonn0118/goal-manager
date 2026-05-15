@@ -68,10 +68,18 @@ export class NotionService {
       if (data.endDate) {
         properties['End date'] = { date: { start: data.endDate } };
       }
+      if (data.description) {
+        properties['Description'] = { rich_text: [{ text: { content: data.description.slice(0, 2000) } }] };
+      }
+
+      const children: any[] = data.description
+        ? [{ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: data.description } }] } }]
+        : [];
 
       const page = await this.client.pages.create({
         parent: { database_id: this.goalsDbId },
         properties,
+        children,
       });
 
       return mapPageToGoal(page as any);
@@ -100,9 +108,25 @@ export class NotionService {
       if (data.endDate !== undefined) {
         properties['End date'] = { date: data.endDate ? { start: data.endDate } : null };
       }
+      if (data.description !== undefined) {
+        properties['Description'] = { rich_text: [{ text: { content: data.description.slice(0, 2000) } }] };
+      }
       // Progress is a formula field (read-only) — skip it
 
       const page = await this.client.pages.update({ page_id: notionPageId, properties });
+
+      // Sync page body: clear existing blocks then write new paragraph
+      if (data.description !== undefined) {
+        const existing = await this.client.blocks.children.list({ block_id: notionPageId });
+        await Promise.all(existing.results.map((b: any) => this.client.blocks.delete({ block_id: b.id })));
+        if (data.description) {
+          await this.client.blocks.children.append({
+            block_id: notionPageId,
+            children: [{ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: data.description } }] } }],
+          });
+        }
+      }
+
       return mapPageToGoal(page as any);
     } catch (err) {
       this.logger.error(`Failed to update goal ${notionPageId}`, err);

@@ -50,6 +50,7 @@ export function mapPageToGoal(page: NotionPage): Goal {
     startValue: numberValue(props['Start value']),
     endValue: numberValue(props['End value']),
     progress: progressNumber(props['Progress']),
+    description: props['Description']?.rich_text?.map((t: any) => t.plain_text).join('') || undefined,
   };
 }
 

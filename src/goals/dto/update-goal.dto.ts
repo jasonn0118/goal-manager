@@ -32,6 +32,10 @@ export class UpdateGoalDto {
   notes?: string;
 
   @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
   @IsDateString()
   lastAdjusted?: string;
 }
