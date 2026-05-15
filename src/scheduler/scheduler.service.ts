@@ -22,7 +22,7 @@ export class SchedulerService {
     this.digestChannel = this.configService.get<string>('SLACK_DIGEST_CHANNEL') ?? '';
   }
 
-  @Cron('0 8 * * *')
+  @Cron('0 8 * * *', { timeZone: 'America/Vancouver' })
   async morningDigest() {
     if (!this.digestChannel) return;
     this.logger.log('Running morning digest cron');
@@ -49,7 +49,7 @@ export class SchedulerService {
     }
   }
 
-  @Cron('0 18 * * *')
+  @Cron('0 18 * * *', { timeZone: 'America/Vancouver' })
   async eveningCheckin() {
     if (!this.digestChannel) return;
     this.logger.log('Running evening check-in cron');
@@ -74,7 +74,7 @@ export class SchedulerService {
     }
   }
 
-  @Cron('0 9 * * 1')
+  @Cron('0 9 * * 1', { timeZone: 'America/Vancouver' })
   async weeklyReview() {
     if (!this.digestChannel) return;
     this.logger.log('Running weekly review cron');
