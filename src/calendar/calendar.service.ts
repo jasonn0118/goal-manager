@@ -129,7 +129,7 @@ export class CalendarService {
         timeMax: new Date(`${endDate}T23:59:59`).toISOString(),
         singleEvents: true,
         orderBy: 'startTime',
-        maxResults: 50,
+        maxResults: 100,
       });
       return (res.data.items ?? []).map((e: any) => ({
         id: e.id,
