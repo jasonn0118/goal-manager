@@ -1,10 +1,21 @@
 # Goal Coach
 
-A NestJS app that runs a conversational Slack bot powered by Claude AI, using Notion as the goal data store.
+A NestJS Slack bot powered by Claude AI that helps you manage goals, plan projects, and stay on track — with Notion as the data store and Google Calendar for scheduling.
 
 ## Overview
 
-Goal Coach lets you manage your goals through natural conversation in Slack. Claude AI acts as your personal coach — it reads your current goals from Notion, helps you prioritise, celebrate wins, and unblock stuck items. Any goal updates Claude suggests are automatically written back to Notion.
+Goal Coach lets you manage goals through natural conversation in Slack. Claude acts as your personal coach — it reads your goals from Notion, helps you prioritise and plan, and writes any changes back automatically. When you plan a project, it creates daily task rows in a Notion Daily Plans database and schedules them as events in Google Calendar, splitting tasks around existing calendar conflicts.
+
+---
+
+## Features
+
+- **Goal CRUD** — create, update, and delete goals via chat
+- **Daily project planner** — break a goal into a day-by-day plan saved to Notion and Google Calendar
+- **Calendar CRUD** — create, view, reschedule, and delete Google Calendar events via chat
+- **Evening check-in** — bot asks how today's tasks went and updates their status in Notion
+- **Goal progress sync** — when a daily task is marked Done, the linked goal's status updates automatically
+- **Scheduled digests** — morning focus, evening check-in, and weekly review posted to a Slack channel
 
 ---
 
@@ -18,42 +29,51 @@ npm install
 
 ### 2. Configure environment variables
 
-Copy `.env` and fill in the values:
-
-```bash
-cp .env .env.local
+```env
+SLACK_BOT_TOKEN=          # Bot User OAuth Token (xoxb-...)
+SLACK_SIGNING_SECRET=     # Signing secret from Slack app Basic Information
+SLACK_APP_TOKEN=          # App-level token for Socket Mode (xapp-...)
+NOTION_API_KEY=           # Notion integration secret
+NOTION_GOALS_DB_ID=       # Goals database ID
+NOTION_SESSIONS_DB_ID=    # Sessions log database ID (optional)
+NOTION_DAILY_PLANS_DB_ID= # Daily Plans database ID
+GOOGLE_CLIENT_ID=         # Google OAuth client ID
+GOOGLE_CLIENT_SECRET=     # Google OAuth client secret
+GOOGLE_REFRESH_TOKEN=     # Long-lived refresh token (see Google Calendar setup)
+ANTHROPIC_API_KEY=        # Anthropic API key
+SLACK_DIGEST_CHANNEL=     # Slack channel ID for scheduled digests (e.g. C012AB3CD)
+PORT=3000
 ```
-
-| Variable | Description |
-|---|---|
-| `SLACK_BOT_TOKEN` | Bot User OAuth Token from your Slack app (`xoxb-...`) |
-| `SLACK_SIGNING_SECRET` | Signing secret from your Slack app's Basic Information |
-| `SLACK_APP_TOKEN` | App-level token for Socket Mode (`xapp-...`) |
-| `NOTION_API_KEY` | Notion Integration secret |
-| `NOTION_GOALS_DB_ID` | ID of your Goals Notion database |
-| `NOTION_SESSIONS_DB_ID` | ID of your Sessions Log Notion database |
-| `ANTHROPIC_API_KEY` | Anthropic API key |
-| `SLACK_DIGEST_CHANNEL` | Slack channel ID for scheduled digests (e.g. `C012AB3CD`) |
-| `PORT` | HTTP port (default: `3000`) |
 
 ### 3. Set up Notion databases
 
-Create two databases in Notion and share them with your integration.
+Share all databases with your integration. Go to each database → **···** → **Connections** → add your integration.
 
 **Goals Database**
 
-| Property | Type | Options |
+| Property | Type | Notes |
 |---|---|---|
-| Name | Title | |
-| Status | Select | Not Started, In Progress, Blocked, Done |
+| Project name | Title | |
+| Status | Status | Not started, In progress, Done |
 | Priority | Select | High, Medium, Low |
-| Horizon | Select | Daily, Sprint, Long-term |
-| Due Date | Date | |
-| Progress | Number | 0–100 |
-| Notes | Rich Text | |
-| Last Adjusted | Date | |
+| Start date | Date | |
+| End date | Date | |
+| Start value | Number | Optional — for metric-based goals |
+| End value | Number | Optional — for metric-based goals |
+| Progress | Rollup | See progress bar setup below |
 
-**Sessions Log Database**
+**Daily Plans Database**
+
+| Property | Type | Notes |
+|---|---|---|
+| Name | Title | Auto-filled as `YYYY-MM-DD · Goal title` |
+| Date | Date | |
+| Projects | Relation → Goals DB | |
+| Planned Hours | Number | |
+| Tasks | Rich Text | |
+| Status | Status | Not started, In progress, Done |
+
+**Sessions Log Database** (optional)
 
 | Property | Type |
 |---|---|
@@ -62,41 +82,42 @@ Create two databases in Notion and share them with your integration.
 | Duration | Number (minutes) |
 | Outcome | Rich Text |
 
-Copy each database ID from the URL:
-`https://notion.so/yourworkspace/<DATABASE_ID>?v=...`
+**Progress bar setup (rollup)**
 
-### 4. Create the Slack App
+1. In the Daily Plans DB, add a Formula property named `Done`: `prop("Status") == "Done"`
+2. In the Goals DB, add a Rollup property named `Progress`:
+   - Relation property: `Daily Plans` (the auto-created reverse relation)
+   - Rollup property: `Done`
+   - Calculate: **Percent checked**
+3. Set the display to **Bar** or **Ring**
+
+### 4. Set up Google Calendar
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com) → create a project → enable the **Google Calendar API**
+2. Create **OAuth 2.0 credentials** (Web application type)
+3. Add `https://developers.google.com/oauthplayground` as an authorised redirect URI
+4. Go to [OAuth Playground](https://developers.google.com/oauthplayground) → gear icon → **Use your own OAuth credentials** → enter your client ID and secret
+5. Authorise `https://www.googleapis.com/auth/calendar` → exchange for tokens → copy the **Refresh token** into `.env` as `GOOGLE_REFRESH_TOKEN`
+6. Add your Google account as a test user under **OAuth consent screen → Test users**
+
+### 5. Create the Slack app
 
 1. Go to [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → **From scratch**
-2. Under **Socket Mode**, enable it and generate an **App-Level Token** with `connections:write` scope — this is your `SLACK_APP_TOKEN`
-3. Under **OAuth & Permissions**, add these **Bot Token Scopes**:
-   - `app_mentions:read`
-   - `chat:write`
-   - `commands`
-   - `im:history`
-   - `im:read`
-   - `im:write`
-4. Install the app to your workspace — copy the **Bot User OAuth Token** as `SLACK_BOT_TOKEN`
-5. Under **Basic Information** → **App Credentials**, copy the **Signing Secret**
-6. Under **Slash Commands**, create these commands (Request URL can be anything — Socket Mode ignores it):
-   - `/goal-list`
-   - `/goal-add`
-   - `/focus`
-   - `/done`
-   - `/review`
-7. Under **Event Subscriptions**, enable events and subscribe to:
-   - `app_mention`
-   - `message.im`
+2. Under **Socket Mode**, enable it and generate an **App-Level Token** with `connections:write` scope
+3. Under **OAuth & Permissions**, add Bot Token Scopes:
+   - `app_mentions:read`, `chat:write`, `commands`, `im:history`, `im:read`, `im:write`, `channels:history`, `channels:read`
+4. Install the app to your workspace
+5. Under **Slash Commands**, create: `/goal-list`, `/goal-add`, `/focus`, `/done`, `/review`
+6. Under **Event Subscriptions**, subscribe to: `app_mention`, `message.im`, `message.channels`
 
-### 5. Run the app
+### 6. Run
 
 ```bash
 # Development
 npm run start:dev
 
 # Production
-npm run build
-npm run start:prod
+npm run build && npm run start:prod
 ```
 
 No ngrok or public URL needed — Slack communicates via Socket Mode WebSocket.
@@ -107,30 +128,37 @@ No ngrok or public URL needed — Slack communicates via Socket Mode WebSocket.
 
 | Command | Description |
 |---|---|
-| `/goal-list` | Show all active goals as a formatted Block Kit list |
-| `/goal-add [title]` | Create a new goal in Notion |
-| `/focus [title]` | Set a goal to "In Progress" and start a timed focus session |
-| `/done [title]` | Mark a goal as done, or end your active focus session |
-| `/review` | Get a Claude-generated progress summary across all goals |
+| `/goal-list` | Show all active goals |
+| `/goal-add [title]` | Create a new goal |
+| `/focus [title]` | Set a goal to In Progress and start a focus session |
+| `/done [title]` | Mark a goal as done or end a focus session |
+| `/review` | Claude-generated summary across all goals |
 
 ---
 
 ## Chatting with the Bot
 
-Mention the bot in any channel (`@goal-coach how should I prioritise today?`) or send it a direct message. It maintains per-user conversation history (last 20 messages) and always has your current goals in context.
+Mention the bot (`@goal-coach`) or DM it. It keeps per-user conversation history (last 20 messages) and always has your current goals, upcoming daily plan tasks, and next 7 days of calendar events in context.
 
-When Claude decides to update a goal, it includes a structured `ACTION:` block in its response that the app parses and executes automatically against Notion — the user just sees the conversational reply.
+**Example things you can say:**
+
+- *"Create a goal to launch the new website by June 30"*
+- *"Plan out the website goal — I can work 9am–6pm, 4 hours a day"*
+- *"Mark today's task as done"*
+- *"Add a team meeting on Friday 2–3pm"*
+- *"Move my 3pm event to 4pm"*
+- *"What should I focus on today?"*
+
+Claude emits structured `ACTION:` blocks in its responses that the app parses and executes automatically — you only see the conversational reply.
 
 ---
 
 ## Scheduled Digests
 
-The scheduler posts to `SLACK_DIGEST_CHANNEL` automatically:
-
-| Schedule | Content |
+| Time | Content |
 |---|---|
-| 8:00 AM daily | Morning focus message based on daily + sprint goals |
-| 6:00 PM daily | Evening check-in prompt |
+| 8:00 AM daily | Morning focus message based on active goals |
+| 6:00 PM daily | Evening check-in listing today's planned tasks and asking for status updates |
 | 9:00 AM Monday | Weekly review summary |
 
 ---
@@ -140,10 +168,11 @@ The scheduler posts to `SLACK_DIGEST_CHANNEL` automatically:
 ```
 src/
 ├── notion/          # Notion API client + data mapper
-├── goals/           # Goal CRUD service + REST controller + DTOs
+├── goals/           # Goal service + REST controller + DTOs
 ├── ai/              # Claude API service + system prompt builder
+├── calendar/        # Google Calendar service (CRUD + conflict-aware scheduling)
 ├── slack/           # Bolt app, slash commands, message handlers
 ├── focus/           # Focus session timer (in-memory)
 ├── scheduler/       # Cron jobs for digests
-└── app.module.ts    # Root module wiring
+└── app.module.ts    # Root module
 ```
