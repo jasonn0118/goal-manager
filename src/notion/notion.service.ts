@@ -60,8 +60,11 @@ export class NotionService {
         Priority: { select: { name: mapPriorityToNotion(data.priority ?? 'medium') } },
       };
 
-      if (data.dueDate) {
-        properties['End date'] = { date: { start: data.dueDate } };
+      if (data.startDate) {
+        properties['Start date'] = { date: { start: data.startDate } };
+      }
+      if (data.endDate) {
+        properties['End date'] = { date: { start: data.endDate } };
       }
 
       const page = await this.client.pages.create({
@@ -89,8 +92,11 @@ export class NotionService {
       if (data.priority) {
         properties['Priority'] = { select: { name: mapPriorityToNotion(data.priority) } };
       }
-      if (data.dueDate !== undefined) {
-        properties['End date'] = { date: data.dueDate ? { start: data.dueDate } : null };
+      if (data.startDate !== undefined) {
+        properties['Start date'] = { date: data.startDate ? { start: data.startDate } : null };
+      }
+      if (data.endDate !== undefined) {
+        properties['End date'] = { date: data.endDate ? { start: data.endDate } : null };
       }
       // Progress is a formula field (read-only) — skip it
 

@@ -10,10 +10,11 @@ export interface Goal {
   status: 'not_started' | 'in_progress' | 'blocked' | 'done';
   priority: 'high' | 'medium' | 'low';
   horizon: 'daily' | 'sprint' | 'long_term';
-  dueDate?: string;
+  startDate?: string;
+  endDate?: string;
+  startValue?: number;
+  endValue?: number;
   progress: number;
-  notes?: string;
-  lastAdjusted?: string;
 }
 
 @Injectable()

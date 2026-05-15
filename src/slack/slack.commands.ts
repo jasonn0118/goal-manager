@@ -32,7 +32,7 @@ function formatGoalsList(goals: Goal[]): any {
   ];
 
   for (const goal of goals) {
-    const due = goal.dueDate ? ` · Due: ${goal.dueDate}` : '';
+    const due = goal.endDate ? ` · Due: ${goal.endDate}` : '';
     blocks.push({
       type: 'section',
       text: {

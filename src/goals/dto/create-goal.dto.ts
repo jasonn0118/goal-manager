@@ -18,7 +18,11 @@ export class CreateGoalDto {
 
   @IsOptional()
   @IsDateString()
-  dueDate?: string;
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
 
   @IsOptional()
   @IsNumber()

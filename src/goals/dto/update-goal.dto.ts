@@ -19,7 +19,7 @@ export class UpdateGoalDto {
 
   @IsOptional()
   @IsDateString()
-  dueDate?: string;
+  endDate?: string;
 
   @IsOptional()
   @IsNumber()

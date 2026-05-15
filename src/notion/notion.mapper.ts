@@ -22,6 +22,10 @@ function formulaNumber(prop: any): number {
   return prop?.formula?.number ?? 0;
 }
 
+function numberValue(prop: any): number | undefined {
+  return prop?.number ?? undefined;
+}
+
 function titleValue(prop: any): string {
   return prop?.title?.map((t: any) => t.plain_text).join('') ?? '';
 }
@@ -38,8 +42,11 @@ export function mapPageToGoal(page: NotionPage): Goal {
     title: titleValue(props['Project name']),
     status: statusRaw as Goal['status'],
     priority: priorityRaw as Goal['priority'],
-    horizon: 'sprint', // not stored in this Notion DB
-    dueDate: dateValue(props['End date']),
+    horizon: 'sprint',
+    startDate: dateValue(props['Start date']),
+    endDate: dateValue(props['End date']),
+    startValue: numberValue(props['Start value']),
+    endValue: numberValue(props['End value']),
     progress: formulaNumber(props['Progress']),
   };
 }
