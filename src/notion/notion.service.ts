@@ -147,6 +147,37 @@ export class NotionService {
     }
   }
 
+  async getDailyPlansForDate(date: string): Promise<{ id: string; tasks: string; plannedHours: number; status: string }[]> {
+    if (!this.dailyPlansDbId) return [];
+    try {
+      const response = await this.client.databases.query({
+        database_id: this.dailyPlansDbId,
+        filter: { property: 'Date', date: { equals: date } },
+      });
+      return response.results.map((page: any) => ({
+        id: page.id,
+        tasks: page.properties['Tasks']?.rich_text?.map((t: any) => t.plain_text).join('') ?? '',
+        plannedHours: page.properties['Planned Hours']?.number ?? 0,
+        status: page.properties['Status']?.status?.name ?? 'Not started',
+      }));
+    } catch (err) {
+      this.logger.error(`Failed to fetch daily plans for ${date}`, err);
+      return [];
+    }
+  }
+
+  async updateDailyPlanRow(pageId: string, status: string): Promise<void> {
+    try {
+      await this.client.pages.update({
+        page_id: pageId,
+        properties: { Status: { status: { name: status } } },
+      });
+    } catch (err) {
+      this.logger.error(`Failed to update daily plan row ${pageId}`, err);
+      throw err;
+    }
+  }
+
   async addSessionLog(goalId: string, duration: number, outcome: string): Promise<void> {
     try {
       await this.client.pages.create({

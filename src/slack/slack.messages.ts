@@ -26,8 +26,12 @@ export function registerMessageHandlers(
 ) {
   async function handleMessage(userId: string, text: string, say: (msg: any) => Promise<any>) {
     try {
-      const goals = await goalsService.getActiveGoals();
-      const response = await aiService.chat(userId, text, goals);
+      const today = new Date().toISOString().split('T')[0];
+      const [goals, todayPlans] = await Promise.all([
+        goalsService.getActiveGoals(),
+        goalsService.getDailyPlansForDate(today),
+      ]);
+      const response = await aiService.chat(userId, text, goals, todayPlans);
       const { cleanText, action } = parseAction(response);
 
       if (action) {
@@ -66,7 +70,10 @@ async function executeAction(action: any, goalsService: GoalsService) {
         await goalsService.archiveGoal(action.goalId);
         break;
       case 'create_daily_plan':
-        await goalsService.createDailyPlan(action.goalId, action.days);
+        await goalsService.createDailyPlan(action.goalId, action.days, action.workStart ?? '09:00', action.workEnd ?? '18:00');
+        break;
+      case 'update_daily_plan':
+        await goalsService.updateDailyPlanRow(action.planRowId, action.status);
         break;
       default:
         logger.warn(`Unknown action type: ${action.type}`);
