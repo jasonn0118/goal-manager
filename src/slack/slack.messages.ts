@@ -34,7 +34,9 @@ export function registerMessageHandlers(
         goalsService.getUpcomingCalendarEvents(today, sevenDaysLater),
       ]);
       const response = await aiService.chat(userId, text, goals, todayPlans, calendarEvents);
+      logger.debug(`Claude raw response: ${response}`);
       const { cleanText, action } = parseAction(response);
+      logger.debug(`Parsed action: ${action ? JSON.stringify(action) : 'none'}`);
 
       let actionError: string | null = null;
       if (action) {
