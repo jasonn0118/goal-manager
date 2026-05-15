@@ -5,18 +5,26 @@ import { AiService } from '../ai/ai.service';
 
 const logger = new Logger('SlackMessages');
 
+function extractFirstJson(str: string): any | null {
+  let depth = 0;
+  let start = -1;
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '{') { if (start === -1) start = i; depth++; }
+    else if (str[i] === '}') { depth--; if (depth === 0 && start !== -1) {
+      try { return JSON.parse(str.slice(start, i + 1)); } catch { return null; }
+    }}
+  }
+  return null;
+}
+
 function parseAction(response: string): { cleanText: string; action: any | null } {
   const actionMarker = 'ACTION:';
   const idx = response.indexOf(actionMarker);
   if (idx === -1) return { cleanText: response.trim(), action: null };
 
   const cleanText = response.slice(0, idx).trim();
-  try {
-    const action = JSON.parse(response.slice(idx + actionMarker.length).trim());
-    return { cleanText, action };
-  } catch {
-    return { cleanText, action: null };
-  }
+  const action = extractFirstJson(response.slice(idx + actionMarker.length));
+  return { cleanText, action };
 }
 
 export function registerMessageHandlers(
