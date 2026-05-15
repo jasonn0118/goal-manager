@@ -49,8 +49,8 @@ ACTION:{"type":"update_goal","goalId":"notion_page_id","fields":{"status":"done"
 
 IMPORTANT rules for ACTION blocks:
 - Always emit the ACTION block — never describe an action without emitting it.
-- Emit ONLY ONE action per response. Never include two ACTION blocks in the same message.
-- If multiple actions are needed (e.g., create goal then create daily plan), do the first action now and tell the user to ask you to do the next step.
+- You can emit multiple ACTION blocks in one response when all required IDs are already known (e.g., deleting or updating several existing items). Each block must be on its own line starting with ACTION:.
+- If an action depends on the ID of something being created in the same response, do that creation first and handle the dependent action in a follow-up.
 
 Available action types:
 - update_goal: update fields — { goalId, fields: { status?, priority?, startDate?, endDate? } }
