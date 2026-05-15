@@ -82,8 +82,8 @@ export class GoalsService {
     return this.notionService.deleteDailyPlanRow(pageId);
   }
 
-  createCalendarEvent(title: string, start: string, end: string, description?: string) {
-    return this.calendarService.createEventFromStrings(title, start, end, description);
+  createCalendarEvent(title: string, start: string, end: string, description?: string, color?: string) {
+    return this.calendarService.createEventFromStrings(title, start, end, description, color);
   }
 
   getUpcomingCalendarEvents(startDate: string, endDate: string) {

@@ -111,7 +111,7 @@ async function executeAction(action: any, goalsService: GoalsService): Promise<s
         await goalsService.deleteDailyPlanRow(action.planRowId);
         break;
       case 'create_calendar_event':
-        await goalsService.createCalendarEvent(action.title, action.start, action.end, action.description);
+        await goalsService.createCalendarEvent(action.title, action.start, action.end, action.description, action.color);
         break;
       case 'update_calendar_event':
         await goalsService.updateCalendarEvent(action.eventId, action.fields);
