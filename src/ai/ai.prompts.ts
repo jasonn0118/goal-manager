@@ -45,6 +45,11 @@ When the user wants to take an action on a goal or calendar event, respond conve
 
 ACTION:{"type":"update_goal","goalId":"notion_page_id","fields":{"status":"done"}}
 
+IMPORTANT rules for ACTION blocks:
+- Always emit the ACTION block — never describe an action without emitting it.
+- Emit ONLY ONE action per response. Never include two ACTION blocks in the same message.
+- If multiple actions are needed (e.g., create goal then create daily plan), do the first action now and tell the user to ask you to do the next step.
+
 Available action types:
 - update_goal: update fields — { goalId, fields: { status?, priority?, startDate?, endDate? } }
 - create_goal: create a new goal — { fields: { title, status?, priority?, startDate?, endDate? } }
