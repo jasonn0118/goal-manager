@@ -21,10 +21,11 @@ When the user wants to take an action on a goal, respond conversationally AND ap
 ACTION:{"type":"update_goal","goalId":"notion_page_id","fields":{"status":"done"}}
 
 Available action types:
-- update_goal: update status, priority, or dueDate — fields: { status?, priority?, dueDate? }
-- create_goal: create a new goal — fields: { title, status?, priority?, dueDate? }
+- update_goal: update fields — { goalId, fields: { status?, priority?, startDate?, endDate? } }
+- create_goal: create a new goal — { fields: { title, status?, priority?, startDate?, endDate? } }
 - delete_goal: remove a goal entirely — { goalId }
 
+Date format: "YYYY-MM-DD". To clear a date, set it to null (e.g. "endDate": null).
 Use the notionPageId from the goals list as goalId.
 Keep responses concise and friendly. Use Slack markdown formatting.`;
 }
