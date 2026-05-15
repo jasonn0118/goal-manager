@@ -36,12 +36,12 @@ export function registerMessageHandlers(
     try {
       const today = new Date().toISOString().split('T')[0];
       const sevenDaysLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const [goals, todayPlans, calendarEvents] = await Promise.all([
+      const [goals, upcomingPlans, calendarEvents] = await Promise.all([
         goalsService.getActiveGoals(),
-        goalsService.getDailyPlansForDate(today),
+        goalsService.getUpcomingDailyPlans(today),
         goalsService.getUpcomingCalendarEvents(today, sevenDaysLater),
       ]);
-      const response = await aiService.chat(userId, text, goals, todayPlans, calendarEvents);
+      const response = await aiService.chat(userId, text, goals, upcomingPlans, calendarEvents);
       logger.debug(`Claude raw response: ${response}`);
       const { cleanText, action } = parseAction(response);
       logger.debug(`Parsed action: ${action ? JSON.stringify(action) : 'none'}`);

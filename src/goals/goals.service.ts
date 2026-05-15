@@ -70,6 +70,10 @@ export class GoalsService {
     return this.notionService.getDailyPlansForDate(date);
   }
 
+  getUpcomingDailyPlans(fromDate: string) {
+    return this.notionService.getUpcomingDailyPlans(fromDate);
+  }
+
   updateDailyPlanRow(pageId: string, status: string): Promise<void> {
     return this.notionService.updateDailyPlanRow(pageId, status);
   }
