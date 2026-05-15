@@ -10,12 +10,14 @@ Goal Coach lets you manage goals through natural conversation in Slack. Claude a
 
 ## Features
 
-- **Goal CRUD** — create, update, and delete goals via chat
+- **Goal CRUD** — create, update, and delete goals via chat, with optional description written to both the Notion page body and a property
 - **Daily project planner** — break a goal into a day-by-day plan saved to Notion and Google Calendar
-- **Calendar CRUD** — create, view, reschedule, and delete Google Calendar events via chat
+- **Calendar CRUD** — create, view, reschedule, recolor, and delete Google Calendar events via chat
+- **Auto calendar colors** — meetings → banana, individual work → tomato, workouts → peacock
 - **Evening check-in** — bot asks how today's tasks went and updates their status in Notion
 - **Goal progress sync** — when a daily task is marked Done, the linked goal's status updates automatically
-- **Scheduled digests** — morning focus, evening check-in, and weekly review posted to a Slack channel
+- **Progress bar** — rollup in Notion shows % of completed daily tasks as a visual bar
+- **Scheduled digests** — morning focus, evening check-in, and weekly review posted to a Slack channel (timezone-aware)
 
 ---
 
@@ -60,6 +62,7 @@ Share all databases with your integration. Go to each database → **···** �
 | End date | Date | |
 | Start value | Number | Optional — for metric-based goals |
 | End value | Number | Optional — for metric-based goals |
+| Description | Rich Text | Short summary — shown to Claude in every message |
 | Progress | Rollup | See progress bar setup below |
 
 **Daily Plans Database**
@@ -138,15 +141,17 @@ No ngrok or public URL needed — Slack communicates via Socket Mode WebSocket.
 
 ## Chatting with the Bot
 
-Mention the bot (`@goal-coach`) or DM it. It keeps per-user conversation history (last 20 messages) and always has your current goals, upcoming daily plan tasks, and next 7 days of calendar events in context.
+Mention the bot (`@goal-coach`) or DM it. It keeps per-user conversation history (last 20 messages) and always has your current goals, upcoming daily plan tasks, and 60 days of calendar events in context.
 
 **Example things you can say:**
 
-- *"Create a goal to launch the new website by June 30"*
+- *"Create a goal to launch the new website by June 30 — description: build landing page, blog, and contact form"*
 - *"Plan out the website goal — I can work 9am–6pm, 4 hours a day"*
 - *"Mark today's task as done"*
+- *"Delete all tasks for the test goal"*
 - *"Add a team meeting on Friday 2–3pm"*
 - *"Move my 3pm event to 4pm"*
+- *"Change the colour of my Friday meeting to grape"*
 - *"What should I focus on today?"*
 
 Claude emits structured `ACTION:` blocks in its responses that the app parses and executes automatically — you only see the conversational reply.
