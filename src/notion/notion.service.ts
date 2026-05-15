@@ -189,14 +189,38 @@ export class NotionService {
   }
 
   async updateDailyPlanRow(pageId: string, status: string): Promise<void> {
+    const page = await this.client.pages.update({
+      page_id: pageId,
+      properties: { Status: { status: { name: status } } },
+    });
+
+    // Sync the linked goal's status based on all plan rows
     try {
+      const goalRelation = (page as any).properties['Projects']?.relation;
+      if (!goalRelation?.length) return;
+      const goalId = goalRelation[0].id;
+
+      const allRows = await this.client.databases.query({
+        database_id: this.dailyPlansDbId,
+        filter: { property: 'Projects', relation: { contains: goalId } },
+      });
+
+      const statuses = allRows.results.map((r: any) => r.properties['Status']?.status?.name ?? 'Not started');
+      let newGoalStatus: string;
+      if (statuses.every((s) => s === 'Done')) {
+        newGoalStatus = 'Done';
+      } else if (statuses.some((s) => s === 'Done' || s === 'In progress')) {
+        newGoalStatus = 'In progress';
+      } else {
+        newGoalStatus = 'Not started';
+      }
+
       await this.client.pages.update({
-        page_id: pageId,
-        properties: { Status: { status: { name: status } } },
+        page_id: goalId,
+        properties: { Status: { status: { name: newGoalStatus } } },
       });
     } catch (err) {
-      this.logger.error(`Failed to update daily plan row ${pageId}`, err);
-      throw err;
+      this.logger.error(`Failed to sync goal status after updating plan row ${pageId}`, err);
     }
   }
 

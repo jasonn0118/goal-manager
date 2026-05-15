@@ -5,26 +5,43 @@ import { AiService } from '../ai/ai.service';
 
 const logger = new Logger('SlackMessages');
 
-function extractFirstJson(str: string): any | null {
+function extractFirstJson(str: string): { json: any; end: number } | null {
   let depth = 0;
   let start = -1;
   for (let i = 0; i < str.length; i++) {
     if (str[i] === '{') { if (start === -1) start = i; depth++; }
-    else if (str[i] === '}') { depth--; if (depth === 0 && start !== -1) {
-      try { return JSON.parse(str.slice(start, i + 1)); } catch { return null; }
-    }}
+    else if (str[i] === '}') {
+      depth--;
+      if (depth === 0 && start !== -1) {
+        try { return { json: JSON.parse(str.slice(start, i + 1)), end: i + 1 }; } catch { return null; }
+      }
+    }
   }
   return null;
 }
 
-function parseAction(response: string): { cleanText: string; action: any | null } {
-  const actionMarker = 'ACTION:';
-  const idx = response.indexOf(actionMarker);
-  if (idx === -1) return { cleanText: response.trim(), action: null };
+function parseActions(response: string): { cleanText: string; actions: any[] } {
+  const marker = 'ACTION:';
+  const actions: any[] = [];
+  let text = response;
 
-  const cleanText = response.slice(0, idx).trim();
-  const action = extractFirstJson(response.slice(idx + actionMarker.length));
-  return { cleanText, action };
+  while (text.includes(marker)) {
+    const idx = text.indexOf(marker);
+    const result = extractFirstJson(text.slice(idx + marker.length).trimStart());
+    if (!result) break;
+
+    let start = text.indexOf('{', idx), end = -1, depth = 0;
+    for (let i = start; i < text.length; i++) {
+      if (text[i] === '{') depth++;
+      else if (text[i] === '}' && --depth === 0) { end = i + 1; break; }
+    }
+    if (end === -1) break;
+
+    text = (text.slice(0, idx) + text.slice(end)).replace(/\n?---\n?/g, '\n').trim();
+    actions.push(result.json);
+  }
+
+  return { cleanText: text, actions };
 }
 
 export function registerMessageHandlers(
@@ -43,12 +60,13 @@ export function registerMessageHandlers(
       ]);
       const response = await aiService.chat(userId, text, goals, upcomingPlans, calendarEvents);
       logger.debug(`Claude raw response: ${response}`);
-      const { cleanText, action } = parseAction(response);
-      logger.debug(`Parsed action: ${action ? JSON.stringify(action) : 'none'}`);
+      const { cleanText, actions } = parseActions(response);
+      logger.debug(`Parsed actions: ${actions.length > 0 ? JSON.stringify(actions) : 'none'}`);
 
       let actionError: string | null = null;
-      if (action) {
+      for (const action of actions) {
         actionError = await executeAction(action, goalsService);
+        if (actionError) break;
       }
 
       const finalText = actionError
