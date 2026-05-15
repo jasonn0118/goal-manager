@@ -18,7 +18,7 @@ interface CalendarEvent {
 export function buildSystemPrompt(goals: Goal[], todayPlans: DailyPlan[] = [], calendarEvents: CalendarEvent[] = []): string {
   const goalsJson = JSON.stringify(goals, null, 2);
   const todayPlansSection = todayPlans.length > 0
-    ? `\nToday's planned tasks (use these IDs for update_daily_plan actions):\n${JSON.stringify(todayPlans, null, 2)}\n`
+    ? `\nUpcoming planned tasks (use the id field for update_daily_plan actions):\n${JSON.stringify(todayPlans, null, 2)}\n`
     : '';
   const calendarSection = calendarEvents.length > 0
     ? `\nUpcoming calendar events (next 7 days — use these IDs for update_calendar_event / delete_calendar_event actions):\n${JSON.stringify(calendarEvents, null, 2)}\n`
@@ -26,6 +26,8 @@ export function buildSystemPrompt(goals: Goal[], todayPlans: DailyPlan[] = [], c
 
   return `You are a personal goal coach assistant integrated into Slack.
 Your job is to help the user plan, focus, and achieve their goals.
+
+Today's date: ${new Date().toISOString().split('T')[0]}
 
 The user's current goals are:
 ${goalsJson}

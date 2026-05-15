@@ -147,7 +147,7 @@ export class NotionService {
     }
   }
 
-  async getDailyPlansForDate(date: string): Promise<{ id: string; tasks: string; plannedHours: number; status: string }[]> {
+  async getDailyPlansForDate(date: string): Promise<{ id: string; date: string; tasks: string; plannedHours: number; status: string }[]> {
     if (!this.dailyPlansDbId) return [];
     try {
       const response = await this.client.databases.query({
@@ -156,12 +156,34 @@ export class NotionService {
       });
       return response.results.map((page: any) => ({
         id: page.id,
+        date: page.properties['Date']?.date?.start ?? date,
         tasks: page.properties['Tasks']?.rich_text?.map((t: any) => t.plain_text).join('') ?? '',
         plannedHours: page.properties['Planned Hours']?.number ?? 0,
         status: page.properties['Status']?.status?.name ?? 'Not started',
       }));
     } catch (err) {
       this.logger.error(`Failed to fetch daily plans for ${date}`, err);
+      return [];
+    }
+  }
+
+  async getUpcomingDailyPlans(fromDate: string): Promise<{ id: string; date: string; tasks: string; plannedHours: number; status: string }[]> {
+    if (!this.dailyPlansDbId) return [];
+    try {
+      const response = await this.client.databases.query({
+        database_id: this.dailyPlansDbId,
+        filter: { property: 'Date', date: { on_or_after: fromDate } },
+        sorts: [{ property: 'Date', direction: 'ascending' }],
+      });
+      return response.results.map((page: any) => ({
+        id: page.id,
+        date: page.properties['Date']?.date?.start ?? '',
+        tasks: page.properties['Tasks']?.rich_text?.map((t: any) => t.plain_text).join('') ?? '',
+        plannedHours: page.properties['Planned Hours']?.number ?? 0,
+        status: page.properties['Status']?.status?.name ?? 'Not started',
+      }));
+    } catch (err) {
+      this.logger.error('Failed to fetch upcoming daily plans', err);
       return [];
     }
   }
