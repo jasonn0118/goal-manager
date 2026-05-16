@@ -93,7 +93,7 @@ export class NotionService {
     try {
       const properties: Record<string, any> = {};
 
-      if (data.title) {
+      if (data.title !== undefined) {
         properties['Project name'] = { title: [{ text: { content: data.title } }] };
       }
       if (data.status) {
@@ -222,10 +222,16 @@ export class NotionService {
   }
 
   async updateDailyPlanRow(pageId: string, status: string): Promise<void> {
-    const page = await this.client.pages.update({
-      page_id: pageId,
-      properties: { Status: { status: { name: status } } },
-    });
+    let page: any;
+    try {
+      page = await this.client.pages.update({
+        page_id: pageId,
+        properties: { Status: { status: { name: status } } },
+      });
+    } catch (err) {
+      this.logger.error(`Failed to update daily plan row ${pageId}`, err);
+      throw err;
+    }
 
     // Sync the linked goal's status based on all plan rows
     try {

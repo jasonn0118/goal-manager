@@ -38,6 +38,9 @@ export class AiService {
         response.content.find((c) => c.type === 'text')?.text ?? 'Sorry, I could not generate a response.';
 
       messages.push({ role: 'assistant', content: assistantText });
+      if (messages.length > MAX_HISTORY) {
+        messages.splice(0, messages.length - MAX_HISTORY);
+      }
       this.history.set(userId, messages);
 
       return assistantText;
