@@ -207,10 +207,10 @@ describe('CalendarService', () => {
       });
     });
 
-    it('returns empty array when no refresh token is configured', async () => {
+    it('returns null when no refresh token is configured', async () => {
       const noTokenService = new CalendarService(makeConfigService(false));
       const events = await noTokenService.getUpcomingEvents('2024-01-15', '2024-02-14');
-      expect(events).toEqual([]);
+      expect(events).toBeNull();
     });
 
     it('returns empty array on API error', async () => {
@@ -274,6 +274,29 @@ describe('CalendarService', () => {
         '09:00', '17:00',
       );
       expect(calendarApi.events.insert).toHaveBeenCalled();
+    });
+
+    it('carries unscheduled hours to the next day when day 1 is fully booked', async () => {
+      // Day 1: work window 09:00–17:00 Vancouver PST = 17:00–01:00 UTC; mark it all busy
+      calendarApi.freebusy.query.mockResolvedValueOnce({
+        data: { calendars: { primary: { busy: [{ start: '2024-01-15T17:00:00Z', end: '2024-01-16T01:00:00Z' }] } } },
+      });
+      // Day 2: all free
+      calendarApi.freebusy.query.mockResolvedValueOnce({
+        data: { calendars: { primary: { busy: [] } } },
+      });
+      await service.scheduleDailyPlan(
+        'Goal',
+        [
+          { date: '2024-01-15', plannedHours: 2, tasks: 'Day 1 work' },
+          { date: '2024-01-16', plannedHours: 1, tasks: 'Day 2 work' },
+        ],
+        '09:00', '17:00',
+      );
+      // No events on day 1 (fully booked), one event on day 2 with carry-over description
+      expect(calendarApi.events.insert).toHaveBeenCalledTimes(1);
+      const desc = calendarApi.events.insert.mock.calls[0][0].requestBody.description;
+      expect(desc).toContain('[Carry-over]');
     });
   });
 });

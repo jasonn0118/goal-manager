@@ -87,7 +87,7 @@ export class GoalsService {
     return this.calendarService.createEventFromStrings(title, start, end, description, color);
   }
 
-  getUpcomingCalendarEvents(startDate: string, endDate: string) {
+  getUpcomingCalendarEvents(startDate: string, endDate: string): Promise<{ id: string; title: string; start: string; end: string; description?: string }[] | null> {
     return this.calendarService.getUpcomingEvents(startDate, endDate);
   }
 
