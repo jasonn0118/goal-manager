@@ -43,6 +43,7 @@ describe('SchedulerService', () => {
 
     goalsService = {
       getAllGoals: jest.fn().mockResolvedValue([mockGoal]),
+      getActiveGoals: jest.fn().mockResolvedValue([mockGoal]),
       getGoalsByHorizon: jest.fn().mockResolvedValue([mockGoal]),
       getDailyPlansForDate: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<GoalsService>;
@@ -56,11 +57,10 @@ describe('SchedulerService', () => {
   });
 
   describe('morningDigest', () => {
-    it('fetches daily and sprint goals then posts a morning message to the digest channel', async () => {
+    it('fetches active goals once and posts a morning message to the digest channel', async () => {
       await service.morningDigest();
-      expect(goalsService.getGoalsByHorizon).toHaveBeenCalledTimes(2);
-      expect(goalsService.getGoalsByHorizon).toHaveBeenCalledWith('daily');
-      expect(goalsService.getGoalsByHorizon).toHaveBeenCalledWith('sprint');
+      expect(goalsService.getActiveGoals).toHaveBeenCalledTimes(1);
+      expect(goalsService.getGoalsByHorizon).not.toHaveBeenCalled();
       expect(aiService.chat).toHaveBeenCalled();
       expect(mockPostMessage).toHaveBeenCalledWith(
         expect.objectContaining({

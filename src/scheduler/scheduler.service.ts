@@ -28,15 +28,10 @@ export class SchedulerService {
     this.logger.log('Running morning digest cron');
 
     try {
-      const [daily, sprint] = await Promise.all([
-        this.goalsService.getGoalsByHorizon('daily'),
-        this.goalsService.getGoalsByHorizon('sprint'),
-      ]);
-
-      const goals = [...daily, ...sprint];
+      const goals = await this.goalsService.getActiveGoals();
       const message = await this.aiService.chat(
         DIGEST_USER_ID,
-        'Good morning! Please give a brief, energizing focus message for today based on my daily and sprint goals. Keep it under 3 sentences.',
+        'Good morning! Please give a brief, energizing focus message for today based on my active goals. Keep it under 3 sentences.',
         goals,
       );
 

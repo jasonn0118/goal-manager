@@ -49,6 +49,30 @@ describe('CalendarService', () => {
     calendarApi = (google.calendar as jest.Mock).mock.results[0].value;
   });
 
+  describe('toDateTime (via getBusySlots timeMin/timeMax)', () => {
+    it('interprets work hours as America/Vancouver time, not server local time', async () => {
+      // January 15 — Vancouver is PST (UTC-8), so 09:00 Vancouver = 17:00 UTC
+      calendarApi.freebusy.query.mockResolvedValue({
+        data: { calendars: { primary: { busy: [] } } },
+      });
+      await service.getBusySlots('2024-01-15', '09:00', '17:00');
+      const { timeMin, timeMax } = calendarApi.freebusy.query.mock.calls[0][0].requestBody;
+      expect(timeMin).toBe('2024-01-15T17:00:00.000Z'); // 09:00 PST = 17:00 UTC
+      expect(timeMax).toBe('2024-01-16T01:00:00.000Z'); // 17:00 PST = 01:00 UTC next day
+    });
+
+    it('handles summer time (PDT = UTC-7) correctly', async () => {
+      // July 15 — Vancouver is PDT (UTC-7), so 09:00 Vancouver = 16:00 UTC
+      calendarApi.freebusy.query.mockResolvedValue({
+        data: { calendars: { primary: { busy: [] } } },
+      });
+      await service.getBusySlots('2024-07-15', '09:00', '17:00');
+      const { timeMin, timeMax } = calendarApi.freebusy.query.mock.calls[0][0].requestBody;
+      expect(timeMin).toBe('2024-07-15T16:00:00.000Z'); // 09:00 PDT = 16:00 UTC
+      expect(timeMax).toBe('2024-07-16T00:00:00.000Z'); // 17:00 PDT = 00:00 UTC next day
+    });
+  });
+
   describe('findFreeSlots (pure logic)', () => {
     it('returns one slot covering the full needed duration when no busy periods exist', () => {
       const slots = service.findFreeSlots([], '09:00', '17:00', '2024-01-15', 4);

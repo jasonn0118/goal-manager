@@ -27,17 +27,15 @@ function parseActions(response: string): { cleanText: string; actions: any[] } {
 
   while (text.includes(marker)) {
     const idx = text.indexOf(marker);
-    const result = extractFirstJson(text.slice(idx + marker.length).trimStart());
+    const afterMarker = text.slice(idx + marker.length);
+    const trimmedAfter = afterMarker.trimStart();
+    const result = extractFirstJson(trimmedAfter);
     if (!result) break;
 
-    let start = text.indexOf('{', idx), end = -1, depth = 0;
-    for (let i = start; i < text.length; i++) {
-      if (text[i] === '{') depth++;
-      else if (text[i] === '}' && --depth === 0) { end = i + 1; break; }
-    }
-    if (end === -1) break;
+    const leadingSpaces = afterMarker.length - trimmedAfter.length;
+    const jsonEnd = idx + marker.length + leadingSpaces + result.end;
 
-    text = (text.slice(0, idx) + text.slice(end)).replace(/\n?---\n?/g, '\n').trim();
+    text = (text.slice(0, idx) + text.slice(jsonEnd)).replace(/\n?---\n?/g, '\n').trim();
     actions.push(result.json);
   }
 

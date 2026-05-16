@@ -38,7 +38,23 @@ export class CalendarService {
   }
 
   private toDateTime(date: string, time: string): Date {
-    return new Date(`${date}T${time}:00`);
+    const timeZone = 'America/Vancouver';
+    const naiveUtc = new Date(`${date}T${time}:00.000Z`);
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false,
+    });
+    const parts = Object.fromEntries(
+      fmt.formatToParts(naiveUtc)
+        .filter(p => p.type !== 'literal')
+        .map(p => [p.type, p.value]),
+    );
+    const vanRead = new Date(
+      `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}.000Z`,
+    );
+    return new Date(naiveUtc.getTime() + (naiveUtc.getTime() - vanRead.getTime()));
   }
 
   private toTimeString(date: Date): string {

@@ -220,6 +220,11 @@ describe('NotionService', () => {
   });
 
   describe('updateDailyPlanRow', () => {
+    it('throws when the initial pages.update call fails', async () => {
+      mockUpdate.mockRejectedValue(new Error('Notion API down'));
+      await expect(service.updateDailyPlanRow('plan-1', 'Done')).rejects.toThrow('Notion API down');
+    });
+
     it('updates the Status property on the plan row', async () => {
       mockUpdate.mockResolvedValue({
         id: 'plan-1',
