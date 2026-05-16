@@ -3,6 +3,7 @@ import { App } from '@slack/bolt';
 import { GoalsService } from '../goals/goals.service';
 import { AiService } from '../ai/ai.service';
 import { parseActions } from './action-parser';
+import { dateInVancouver } from '../common/date.util';
 
 const logger = new Logger('SlackMessages');
 
@@ -13,8 +14,8 @@ export function registerMessageHandlers(
 ) {
   async function handleMessage(userId: string, text: string, say: (msg: any) => Promise<any>) {
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const calendarEndDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const today = dateInVancouver();
+      const calendarEndDate = dateInVancouver(new Date(Date.now() + 60 * 24 * 60 * 60 * 1000));
       const [goals, upcomingPlans, calendarEvents] = await Promise.all([
         goalsService.getActiveGoals(),
         goalsService.getUpcomingDailyPlans(today),
