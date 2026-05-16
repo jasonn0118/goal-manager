@@ -4,6 +4,7 @@ import { Client } from '@notionhq/client';
 import { Goal } from '../goals/goals.service';
 import { CreateGoalDto } from '../goals/dto/create-goal.dto';
 import { mapPageToGoal, mapStatusToNotion, mapPriorityToNotion } from './notion.mapper';
+import { dateInVancouver } from '../common/date.util';
 
 type GoalWritableFields = Partial<Pick<Goal, 'title' | 'status' | 'priority' | 'startDate' | 'endDate' | 'description'>>;
 
@@ -271,7 +272,7 @@ export class NotionService {
         parent: { database_id: this.sessionsDbId },
         properties: {
           Goal: { relation: [{ id: goalId }] },
-          Date: { date: { start: new Date().toISOString().split('T')[0] } },
+          Date: { date: { start: dateInVancouver() } },
           Duration: { number: duration },
           Outcome: { rich_text: [{ text: { content: outcome } }] },
         },

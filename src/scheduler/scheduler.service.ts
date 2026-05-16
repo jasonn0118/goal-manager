@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { WebClient } from '@slack/web-api';
 import { GoalsService } from '../goals/goals.service';
+import { dateInVancouver } from '../common/date.util';
 import { AiService } from '../ai/ai.service';
 
 const DIGEST_USER_ID = 'scheduler';
@@ -50,7 +51,7 @@ export class SchedulerService {
     this.logger.log('Running evening check-in cron');
 
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = dateInVancouver();
       const plans = await this.goalsService.getDailyPlansForDate(today);
 
       let text: string;

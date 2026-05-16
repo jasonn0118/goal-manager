@@ -1,4 +1,5 @@
 import { Goal } from '../goals/goals.service';
+import { dateInVancouver } from '../common/date.util';
 
 interface DailyPlan {
   id: string;
@@ -29,7 +30,7 @@ export function buildSystemPrompt(goals: Goal[], todayPlans: DailyPlan[] = [], c
   return `You are a personal goal coach assistant integrated into Slack.
 Your job is to help the user plan, focus, and achieve their goals.
 
-Today's date: ${new Date().toISOString().split('T')[0]}
+Today's date: ${dateInVancouver()}
 
 The user's current goals are:
 ${goalsJson}
