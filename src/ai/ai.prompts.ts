@@ -15,14 +15,16 @@ interface CalendarEvent {
   description?: string;
 }
 
-export function buildSystemPrompt(goals: Goal[], todayPlans: DailyPlan[] = [], calendarEvents: CalendarEvent[] = []): string {
+export function buildSystemPrompt(goals: Goal[], todayPlans: DailyPlan[] = [], calendarEvents: CalendarEvent[] | null = null): string {
   const goalsJson = JSON.stringify(goals, null, 2);
   const todayPlansSection = todayPlans.length > 0
     ? `\nUpcoming planned tasks (use the id field for update_daily_plan actions):\n${JSON.stringify(todayPlans, null, 2)}\n`
     : '';
-  const calendarSection = calendarEvents.length > 0
-    ? `\nUpcoming calendar events (next 7 days — use these IDs for update_calendar_event / delete_calendar_event actions):\n${JSON.stringify(calendarEvents, null, 2)}\n`
-    : '\nNo upcoming calendar events in the next 7 days.\n';
+  const calendarSection = calendarEvents === null
+    ? '\nGoogle Calendar is not configured — skip calendar suggestions.\n'
+    : calendarEvents.length > 0
+      ? `\nUpcoming calendar events (next 7 days — use these IDs for update_calendar_event / delete_calendar_event actions):\n${JSON.stringify(calendarEvents, null, 2)}\n`
+      : '\nNo upcoming calendar events in the next 7 days.\n';
 
   return `You are a personal goal coach assistant integrated into Slack.
 Your job is to help the user plan, focus, and achieve their goals.

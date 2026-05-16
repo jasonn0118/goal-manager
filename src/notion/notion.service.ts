@@ -5,6 +5,8 @@ import { Goal } from '../goals/goals.service';
 import { CreateGoalDto } from '../goals/dto/create-goal.dto';
 import { mapPageToGoal, mapStatusToNotion, mapPriorityToNotion } from './notion.mapper';
 
+type GoalWritableFields = Partial<Pick<Goal, 'title' | 'status' | 'priority' | 'startDate' | 'endDate' | 'description'>>;
+
 @Injectable()
 export class NotionService {
   private readonly logger = new Logger(NotionService.name);
@@ -89,7 +91,7 @@ export class NotionService {
     }
   }
 
-  async updateGoal(notionPageId: string, data: Partial<Goal>): Promise<Goal> {
+  async updateGoal(notionPageId: string, data: GoalWritableFields): Promise<Goal> {
     try {
       const properties: Record<string, any> = {};
 

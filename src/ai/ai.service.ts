@@ -17,7 +17,7 @@ export class AiService {
     this.client = new Anthropic({ apiKey: this.configService.get<string>('ANTHROPIC_API_KEY') });
   }
 
-  async chat(userId: string, userMessage: string, goals: Goal[], todayPlans: { id: string; tasks: string; plannedHours: number; status: string }[] = [], calendarEvents: { id: string; title: string; start: string; end: string; description?: string }[] = []): Promise<string> {
+  async chat(userId: string, userMessage: string, goals: Goal[], todayPlans: { id: string; tasks: string; plannedHours: number; status: string }[] = [], calendarEvents: { id: string; title: string; start: string; end: string; description?: string }[] | null = null): Promise<string> {
     const messages = this.history.get(userId) ?? [];
 
     messages.push({ role: 'user', content: userMessage });
