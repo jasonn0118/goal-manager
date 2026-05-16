@@ -39,9 +39,9 @@ NOTION_API_KEY=           # Notion integration secret
 NOTION_GOALS_DB_ID=       # Goals database ID
 NOTION_SESSIONS_DB_ID=    # Sessions log database ID (optional)
 NOTION_DAILY_PLANS_DB_ID= # Daily Plans database ID
-GOOGLE_CLIENT_ID=         # Google OAuth client ID
-GOOGLE_CLIENT_SECRET=     # Google OAuth client secret
-GOOGLE_REFRESH_TOKEN=     # Long-lived refresh token (see Google Calendar setup)
+GOOGLE_CLIENT_ID=         # Google OAuth client ID (optional — required for calendar features)
+GOOGLE_CLIENT_SECRET=     # Google OAuth client secret (optional — required for calendar features)
+GOOGLE_REFRESH_TOKEN=     # Long-lived refresh token (optional — if absent, calendar features are disabled)
 ANTHROPIC_API_KEY=        # Anthropic API key
 SLACK_DIGEST_CHANNEL=     # Slack channel ID for scheduled digests (e.g. C012AB3CD)
 PORT=3000
@@ -172,11 +172,12 @@ Claude emits structured `ACTION:` blocks in its responses that the app parses an
 
 ```
 src/
+├── common/          # Shared utilities (e.g. Vancouver-timezone date helper)
 ├── notion/          # Notion API client + data mapper
 ├── goals/           # Goal service + REST controller + DTOs
 ├── ai/              # Claude API service + system prompt builder
 ├── calendar/        # Google Calendar service (CRUD + conflict-aware scheduling)
-├── slack/           # Bolt app, slash commands, message handlers
+├── slack/           # Bolt app, slash commands, message handlers, action parser
 ├── focus/           # Focus session timer (in-memory)
 ├── scheduler/       # Cron jobs for digests
 └── app.module.ts    # Root module
